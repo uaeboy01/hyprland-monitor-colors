@@ -1,32 +1,35 @@
 # Monitor Colors
 
-Independent saturation, contrast, gamma, hue, white balance, and RGB controls for
-monitors managed by Hyprland's Lua configuration. The app builds ICC profiles
-using Little CMS and attaches them to existing monitor rules.
+Independent saturation, contrast, gamma, hue, white balance, and RGB controls for monitors managed by Hyprland's Lua configuration. The app builds ICC profiles using Little CMS and attaches them to existing monitor rules.
 
-These are creative color adjustments, not measured display calibration. The app
-is intended for the SDR desktop; HDR behavior has not been validated.
+These are creative color adjustments, not measured display calibration. The app is intended for the SDR desktop whilst HDR behavior has not been validated.
+
+I'm currently running the app on CachyOS with Noctalia Hyprland 0.56.2 on NVIDIA drivers, I added a configurable monitor selection if anyone needs to, but I've never live tested on different desktops, distros or GPUs
 
 ![Monitor Colors preview](docs/preview.png)
 
-## Requirements
+## Installation
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python monitor_colors.py
+```
+##  Requirements
+- A Hyprland session with Lua monitor rules and ICC support
+- `hyprctl` available in your command path
+- Python 3.10 or newer, NumPy, PySide6, and the Little CMS 2 shared library
 
-- Linux and a running Hyprland session with Lua monitor rules and ICC support.
-- `hyprctl` available in your command path.
-- Python 3.10 or newer, NumPy, PySide6, and the Little CMS 2 shared library.
+Arch packages:
+```bash
+sudo pacman -S python python-numpy pyside6 lcms2
+```
 
-The original installed app was used on CachyOS with Hyprland 0.56.2 and NVIDIA
-615.78.08. The shareable version adds configurable monitor selection; a live
-Apply from this packaged version has not been tested. NVIDIA is not required
-by the app's code, but other graphics stacks have not been tested here.
+
 
 ## Install and run
 
 On Arch Linux / CachyOS, install dependencies:
-
-```bash
-sudo pacman -S --needed python python-numpy pyside6 lcms2
-```
 
 From this repository, run:
 
@@ -44,12 +47,11 @@ This read-only command prints connected connector-to-model pairs. Create
 }
 ```
 
-List only the monitors you want the app to manage. Connector names can change
-after reconnecting displays; update the mapping if that happens.
+List only the monitors you want the app to manage. Connector names can change after reconnecting displays, so make sure to update the mapping if that happens.
 
 Your selected monitors must already have rules in
 `~/.config/hypr/config/monitors.lua`, with one connector-based `hl.monitor`
-block per monitor. Preserve your existing mode, position, and scale:
+block per monitor. Preserve your existing mode, position, and scale by adding:
 
 ```lua
 hl.monitor({
@@ -58,41 +60,12 @@ hl.monitor({
 })
 ```
 
-The configuration editor expects the opening `hl.monitor({` and closing `})`
-on their own lines, as shown. It does not edit description-based selectors,
-computed monitor rules, or arbitrary Lua layouts. Do not replace a working
-monitor configuration with the abbreviated example above.
+The configuration editor expects the opening `hl.monitor({` and closing `})` on their own lines, as shown. It does not edit selectors, monitor rules, or arbitrary Lua layouts
 
-Then launch the app:
+When using, choose a monitor, adjust the sliders, and press **Apply to this monitor**. Reset returns the controls to their defaults; press Apply to save that reset. Revert discards the current unsaved edits. Nothing is perma changed in system-wide configs, so don't fret :D
 
-```bash
-python monitor_colors.py
-```
 
-Choose a monitor, adjust the sliders, and press **Apply to this monitor**.
-Reset returns the controls to their defaults; press Apply to save that reset.
-Revert discards the current unsaved edits.
-
-### Optional virtual environment / command installation
-
-Little CMS and Hyprland remain system dependencies. For Python dependencies:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python monitor_colors.py
-```
-
-`reqs.txt` is an alias for `requirements.txt`. To also install the
-`monitor-colors` command in the active virtual environment:
-
-```bash
-python -m pip install .
-monitor-colors
-```
-
-## Command-line controls
+## CLI:
 
 ```bash
 # Read saved settings; does not verify that those profiles are active.
@@ -122,21 +95,9 @@ Applying changes:
    resolution, refresh rate, position, scale, transform, and disabled state.
 5. Attempts to restore the previous configuration if those checks fail.
 
-Apply preserves the existing mode and layout fields in the edited file.
-Reloading still reapplies the complete compositor configuration, including rules
-from other files. The app also uses `~/.local/state/monitor-colors/apply.lock`
-to serialize its own Apply operations. Other monitor managers do not share that
-lock.
+## Noctalia users & conflicts
 
-The default adjustment removes this app's profile assignment. Existing
-unmanaged ICC assignments are protected rather than silently overwritten.
-Legacy profiles from the original DP-2 saturation utility can still be read.
-
-## Noctalia / monitor-manager conflicts
-
-The Noctalia Hyprland Settings plugin can generate additional monitor rules.
-Hyprland selects the last matching rule as a whole; it does not merge an
-ICC setting from an earlier rule into a later rule.
+The Noctalia Hyprland Settings plugin can generate additional monitor rules. Hyprland selects the last matching rule as a whole, it does not merge an ICC setting from an earlier rule into a later rule.
 
 The working order on the original setup was:
 
@@ -145,17 +106,7 @@ require("hyprland-settings")
 require("config.monitors")
 ```
 
-This gives **all** fields in `config.monitors` precedence, including mode,
-refresh rate, position, and scale. Later layout changes through the plugin may
-therefore be overridden. Keep one deliberate source of authority for each
-monitor's complete rule.
-
-**Known limitation:** Apply checks reload success and geometry, but does not
-verify that its ICC profile became active. If a later rule overrides the profile,
-the app can report success without visible color changes. Reapplying the same
-saved controls can also return without reloading because the file is unchanged.
-
-See [the troubleshooting notes](docs/troubleshooting.md) for more detail.
+This gives **all** fields in `config.monitors` precedence, including mode, refresh rate, position, and scale. Later layout changes through the plugin may therefore be overridden. Keep one deliberate source of authority for each monitor's complete rule so you don't get confused on which changes which when overriden.
 
 ## Tests
 
@@ -166,20 +117,9 @@ python monitor_colors.py --self-test
 QT_QPA_PLATFORM=offscreen python -m unittest discover -s tests -v
 ```
 
-The self-test checks 15 generated profile transforms through Little CMS.
-The 12 unit tests exercise color behavior, isolated configuration transactions,
-rollback, explicit monitor mappings, read-only queries, and GUI draft handling.
-Tests use temporary files, synthetic monitor rules, and mocked `hyprctl` calls;
-they do not apply display settings or reload Hyprland.
+The self-test checks 15 generated profile transforms through Little CMS. The 12 unit tests exercise color behavior, isolated configs, rollback, explicit monitor mappings, read-only queries, and UI drafts. Tests use temp files, monitor rules, and mocked `hyprctl` calls; they don't apply display settings or reload hyprland
 
 See [VALIDATION.md](VALIDATION.md) for what was actually verified.
-
-## Sharing
-
-This repository excludes personal monitor rules, generated profiles, system
-logs, application data, and local backups. Review changes before uploading.
-No license has been selected; add a license if you want to grant explicit reuse
-and redistribution permissions. `pyproject.toml` provides optional pip packaging.
 
 The [NVIDIA idle-power notes](docs/nvidia-idle-power.md) describe a separate
 manual driver experiment. The color app does not change driver parameters.
