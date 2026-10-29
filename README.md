@@ -4,8 +4,11 @@ Independent saturation, contrast, gamma, hue, white balance, and RGB controls fo
 
 These are creative color adjustments, not measured display calibration. The app is intended for the SDR desktop whilst HDR behavior has not been validated.
 
-I'm currently running the app on CachyOS with Noctalia Hyprland 0.56.2 on NVIDIA drivers, I added a configurable monitor selection if anyone needs to, but I've never live tested on different desktops, distros or GPUs
+I'm currently running the app on CachyOS with Noctalia Hyprland 0.56.2 on NVIDIA drivers adding a configurable monitor selection if anyone needs to, but I've never live tested on different desktops, distros or GPUs
 
+This app was created by local LLM models on Ollama / QwenCode. I do not take the work under my ownership, I'm just uploading it just incase anyone else wants something similar to it :)
+
+### UI Preview:
 ![Monitor Colors preview](docs/preview.png)
 
 ## Installation
@@ -15,6 +18,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 python monitor_colors.py
 ```
+
 ##  Requirements
 - A Hyprland session with Lua monitor rules and ICC support
 - `hyprctl` available in your command path
