@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hyprland-monitor-colors"
+version = "0.1.0"
+description = "Per-monitor creative color adjustments through ICC profiles for Hyprland Lua configurations"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["numpy", "PySide6"]
+
+[project.scripts]
+monitor-colors = "monitor_colors:entrypoint"
+
+[tool.setuptools]
+py-modules = ["monitor_colors"]
